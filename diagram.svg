@@ -1,0 +1,496 @@
+*AddCommand*
+
+------------------------------------------------------------------------
+
++ AddCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*ClearCommand*
+
+------------------------------------------------------------------------
+
++ ClearCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*CollectionManager*
+
+------------------------------------------------------------------------
+
++ CollectionManager(FileManager):
+
+------------------------------------------------------------------------
+
+- fileManager: FileManager
+- collection: LinkedList<Person>
+- creationDate: LocalDateTime
+
+------------------------------------------------------------------------
+
++ printFieldDescendingPassportID(): void
++ reorder(): void
++ countLessThanHeight(float): long
+- sortCollection(): void
++ generateId(): int
++ removeById(int): void
+- reassignIds(): void
++ getCollection(): LinkedList<Person>
++ add(Person): void
+- validateIds(): void
++ getById(int): Person
++ getCreationDate(): LocalDateTime
++ countGreaterThanPassportID(String): long
++ update(int, Person): void
++ clear(): void
++ removeFirst(): void
++ save(): void
+
+/<<enumeration>>/
+*Color*
+
+------------------------------------------------------------------------
+
+- Color():
+
+------------------------------------------------------------------------
+
++ GREEN:
++ BROWN:
++ ORANGE:
++ BLACK:
+
+------------------------------------------------------------------------
+
++ values(): Color[]
++ nameList(): String
++ valueOf(String): Color
+
+*Command (abstract)*
+
+------------------------------------------------------------------------
+
++ Command(String, String):
+
+------------------------------------------------------------------------
+
+- name: String
+- description: String
+
+------------------------------------------------------------------------
+
++ getDescription(): String
++ getName(): String
++ toString(): String
++ execute(String): boolean
+
+*CommandManager*
+
+------------------------------------------------------------------------
+
++ CommandManager(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- scriptStack: LinkedList<String>
+- commands: Map<String, Command>
+- history: LinkedList<String>
+- console: Console
+
+------------------------------------------------------------------------
+
++ getCollectionManager(): CollectionManager
++ getHistory(): LinkedList<String>
++ getScriptStack(): LinkedList<String>
+- registerCommand(Command): void
++ execute(String): void
++ getCommands(): Map<String, Command>
+- addToHistory(String): void
+- registerCommands(): void
+
+*Console*
+
+------------------------------------------------------------------------
+
++ Console(Scanner, boolean):
+
+------------------------------------------------------------------------
+
++ GREEN: String
++ CYAN: String
++ YELLOW: String
++ BLUE: String
++ RED: String
++ RESET: String
+- scanner: Scanner
+- isScript: boolean
+
+------------------------------------------------------------------------
+
++ printError(String): void
+- readPassportID(): String
+- readCoordinates(): Coordinates
++ println(String): void
+- readEyeColor(): Color
+- readLocation(): Location
+- readName(): String
+- readBirthday(): Date
+- readHeight(): float
++ readLine(): String
++ printInfo(String): void
++ readPerson(int): Person
++ print(String): void
++ printSuccess(String): void
+
+*Coordinates*
+
+------------------------------------------------------------------------
+
++ Coordinates(double, long):
+
+------------------------------------------------------------------------
+
+- x: double
+- y: long
+
+------------------------------------------------------------------------
+
++ getX(): double
++ toString(): String
++ getY(): long
+
+*CountGreaterThanPassportIDCommand*
+
+------------------------------------------------------------------------
+
++ CountGreaterThanPassportIDCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- collectionManager: CollectionManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*CountLessThanHeightCommand*
+
+------------------------------------------------------------------------
+
++ CountLessThanHeightCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*ExecuteScriptCommand*
+
+------------------------------------------------------------------------
+
++ ExecuteScriptCommand(CommandManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- commandManager: CommandManager
+
+------------------------------------------------------------------------
+
+- buildGraphDFS(String, Set<String>, Map<String, Set<String>>): boolean
+- parseScriptDependencies(File): Set<String>
++ execute(String): boolean
+- detectPreExecutionRecursion(File): boolean
+- hasCycleDFS(String, Map<String, Set<String>>, Set<String>,
+Set<String>): boolean
+
+*ExitCommand*
+
+------------------------------------------------------------------------
+
++ ExitCommand(Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*FileManager*
+
+------------------------------------------------------------------------
+
++ FileManager(String):
+
+------------------------------------------------------------------------
+
+- envVariable: String
+- gson: Gson
+
+------------------------------------------------------------------------
+
++ writeCollection(LinkedList<Person>): void
++ readCollection(): LinkedList<Person>
+
+*HelpCommand*
+
+------------------------------------------------------------------------
+
++ HelpCommand(CommandManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- commandManager: CommandManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*HistoryCommand*
+
+------------------------------------------------------------------------
+
++ HistoryCommand(CommandManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- commandManager: CommandManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*InfoCommand*
+
+------------------------------------------------------------------------
+
++ InfoCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*LocalDateTimeAdapter*
+
+------------------------------------------------------------------------
+
++ LocalDateTimeAdapter():
+
+------------------------------------------------------------------------
+
+- formatter: DateTimeFormatter
+
+------------------------------------------------------------------------
+
++ write(JsonWriter, LocalDateTime): void
++ read(JsonReader): LocalDateTime
+
+*Location*
+
+------------------------------------------------------------------------
+
++ Location(float, float, float, String):
+
+------------------------------------------------------------------------
+
+- z: float
+- x: float
+- y: float
+- name: String
+
+------------------------------------------------------------------------
+
++ getX(): float
++ getY(): float
++ getName(): String
++ getZ(): float
++ toString(): String
+
+*Main*
+
+------------------------------------------------------------------------
+
++ Main():
+
+------------------------------------------------------------------------
+
++ main(String[]): void
+
+*Person*
+
+------------------------------------------------------------------------
+
++ Person(int, String, Coordinates, LocalDateTime, float, Date, String,
+Color, Location):
+
+------------------------------------------------------------------------
+
+- name: String
+- coordinates: Coordinates
+- height: float
+- birthday: Date
+- passportID: String
+- id: int
+- location: Location
+- creationDate: LocalDateTime
+- eyeColor: Color
+
+------------------------------------------------------------------------
+
++ setHeight(float): void
++ getCreationDate(): LocalDateTime
++ getCoordinates(): Coordinates
++ getHeight(): float
++ setBirthday(Date): void
++ setName(String): void
++ compareTo(Person): int
++ setPassportID(String): void
++ equals(Object): boolean
++ setId(int): void
++ getName(): String
++ setCoordinates(Coordinates): void
++ getId(): int
++ getBirthday(): Date
++ getLocation(): Location
++ setCreationDate(LocalDateTime): void
++ toString(): String
++ setEyeColor(Color): void
++ setLocation(Location): void
++ hashCode(): int
++ getEyeColor(): Color
++ getPassportID(): String
+
+*PrintFieldDescendingPassportIDCommand*
+
+------------------------------------------------------------------------
+
++ PrintFieldDescendingPassportIDCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- collectionManager: CollectionManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*RemoveByIdCommand*
+
+------------------------------------------------------------------------
+
++ RemoveByIdCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*RemoveFirstCommand*
+
+------------------------------------------------------------------------
+
++ RemoveFirstCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*ReorderCommand*
+
+------------------------------------------------------------------------
+
++ ReorderCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- collectionManager: CollectionManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*SaveCommand*
+
+------------------------------------------------------------------------
+
++ SaveCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*ShowCommand*
+
+------------------------------------------------------------------------
+
++ ShowCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- console: Console
+- collectionManager: CollectionManager
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+
+*UpdateCommand*
+
+------------------------------------------------------------------------
+
++ UpdateCommand(CollectionManager, Console):
+
+------------------------------------------------------------------------
+
+- collectionManager: CollectionManager
+- console: Console
+
+------------------------------------------------------------------------
+
++ execute(String): boolean
+

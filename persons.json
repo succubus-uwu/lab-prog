@@ -1,0 +1,20 @@
+[
+  {
+    "id": 2147483647,
+    "name": "ndlscscs",
+    "coordinates": {
+      "x": 3.0,
+      "y": 3
+    },
+    "creationDate": "2026-02-28T15:08:19.512843",
+    "height": 3.0,
+    "birthday": "Feb 28, 2000, 12:00:00 AM",
+    "passportID": "3232",
+    "location": {
+      "x": 32.0,
+      "y": 32.0,
+      "z": 32.0,
+      "name": "32"
+    }
+  }
+]
