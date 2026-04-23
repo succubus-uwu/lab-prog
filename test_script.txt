@@ -1,0 +1,12 @@
+# Test script for execute_script command
+# This script demonstrates various commands that can be executed
+
+show
+info
+count_less_than_height 180
+count_greater_than_passport_id AB
+print_field_descending_passport_id
+remove_by_id 1
+show
+clear
+show

@@ -1,0 +1,5 @@
+axl/itmo/client/command/ClientCommandManager.class
+axl/itmo/client/net/ResponseReceiver.class
+axl/itmo/client/ui/Console.class
+axl/itmo/client/ClientApp.class
+axl/itmo/client/net/CommandSender.class

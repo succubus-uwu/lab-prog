@@ -1,0 +1,9 @@
+axl/itmo/common/dto/CommandRequest.class
+axl/itmo/common/dto/CommandResponse.class
+axl/itmo/common/util/PersonLocationComparator.class
+axl/itmo/common/CommandNames.class
+axl/itmo/common/util/LocalDateTimeAdapter.class
+axl/itmo/common/model/Location.class
+axl/itmo/common/model/Person.class
+axl/itmo/common/model/Coordinates.class
+axl/itmo/common/model/Color.class
