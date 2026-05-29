@@ -14,6 +14,7 @@ import java.util.LinkedList;
 /**
  * Handles reading and writing the collection to a file.
  */
+@Deprecated
 public class FileManager {
     private final String envVariable;
     private final Gson gson;

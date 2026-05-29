@@ -18,3 +18,73 @@
 [2026-04-24 02:10:41] INFO    : Request received from 127.0.0.1 -> info
 [2026-04-24 02:10:41] INFO    : Response sent to 127.0.0.1 (Success: true)
 [2026-04-24 02:10:50] INFO    : Client disconnected: 127.0.0.1
+[2026-04-25 12:41:50] INFO    : Server started on port 9999
+[2026-04-25 12:43:08] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 12:43:08] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:43:08] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:43:12] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:43:12] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:43:17] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:43:17] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:43:18] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:43:18] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:43:20] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:43:20] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:43:30] INFO    : Client disconnected: 127.0.0.1
+[2026-04-25 12:46:32] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 12:46:32] INFO    : Request received from 127.0.0.1 -> register
+[2026-04-25 12:46:32] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:46:35] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:46:35] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:47:01] INFO    : Request received from 127.0.0.1 -> add
+[2026-04-25 12:47:01] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:47:04] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:47:04] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:47:19] INFO    : Collection saved to file
+[2026-04-25 12:47:53] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:47:53] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:47:55] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 12:47:55] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:48:55] INFO    : Client disconnected: 127.0.0.1
+[2026-04-25 12:49:18] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 12:49:18] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 12:49:18] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:49:22] INFO    : Client disconnected: 127.0.0.1
+[2026-04-25 12:49:28] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 12:49:28] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 12:49:28] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:49:35] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 12:49:35] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:49:42] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 12:49:42] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 12:50:15] INFO    : Client disconnected: 127.0.0.1
+[2026-04-25 12:50:29] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 12:50:29] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 12:50:29] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:50:37] INFO    : Request received from 127.0.0.1 -> remove_first
+[2026-04-25 12:50:37] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 12:52:37] INFO    : Request received from 127.0.0.1 -> add
+[2026-04-25 12:52:37] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:42:24] INFO    : Server started on port 9999
+[2026-04-25 16:42:54] INFO    : New client connection from: 127.0.0.1
+[2026-04-25 16:42:54] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:42:54] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 16:43:02] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 16:43:02] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:43:06] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:06] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:43:07] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:07] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:43:08] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:08] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 16:43:28] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:28] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:43:29] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:29] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:43:30] INFO    : Request received from 127.0.0.1 -> show
+[2026-04-25 16:43:30] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:44:02] INFO    : Request received from 127.0.0.1 -> register
+[2026-04-25 16:44:02] INFO    : Response sent to 127.0.0.1 (Success: true)
+[2026-04-25 16:44:11] INFO    : Request received from 127.0.0.1 -> login
+[2026-04-25 16:44:11] INFO    : Response sent to 127.0.0.1 (Success: false)
+[2026-04-25 17:36:23] INFO    : Server started on port 9999

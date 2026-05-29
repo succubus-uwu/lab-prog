@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  pg:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ""
+      POSTGRES_DB: studs
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    restart: unless-stopped
+    networks:
+      - server_network
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: itmo_server
+    depends_on:
+      - pg
+    ports:
+      - "9999:9999"
+    environment:
+      - DB_HOST=pg
+      - DB_NAME=studs
+      - DB_USER=postgres
+      - DB_PASSWORD=
+    restart: unless-stopped
+    networks:
+      - server_network
+    stdin_open: true
+    tty: true
+
+volumes:
+  pgdata:
+
+networks:
+  server_network:
+    driver: bridge

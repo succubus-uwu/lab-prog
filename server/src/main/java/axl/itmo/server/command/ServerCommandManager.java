@@ -6,6 +6,7 @@ import axl.itmo.server.collection.CollectionManager;
 import axl.itmo.server.logging.ServerLogger;
 import axl.itmo.server.utils.Console;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 
@@ -92,10 +93,14 @@ public class ServerCommandManager {
         if (person != null) {
             person.setId(id);
             person.setCreationDate(LocalDateTime.now());
-            collectionManager.add(person);
-            console.printSuccess("Person added successfully with ID: " + id);
-            logger.logCollectionSaved(); // Log as collection change
-            return true;
+            try {
+                collectionManager.add(person, 0L); // Use 0 as default owner for console
+                console.printSuccess("Person added successfully with ID: " + id);
+                logger.logCollectionSaved(); // Log as collection change
+                return true;
+            } catch (SQLException e) {
+                console.printError("Error saving to database: " + e.getMessage());
+            }
         }
         return false;
     }
@@ -115,10 +120,14 @@ public class ServerCommandManager {
         Person person = console.readPerson(id);
         if (person != null) {
             person.setCreationDate(LocalDateTime.now());
-            collectionManager.update(id, person);
-            console.printSuccess("Person updated successfully.");
-            logger.logCollectionSaved();
-            return true;
+            try {
+                collectionManager.update(id, person, 0L);
+                console.printSuccess("Person updated successfully.");
+                logger.logCollectionSaved();
+                return true;
+            } catch (SQLException e) {
+                console.printError("Error updating database: " + e.getMessage());
+            }
         }
         return false;
     }
@@ -134,17 +143,27 @@ public class ServerCommandManager {
             return false;
         }
 
-        collectionManager.removeById(id);
-        console.printSuccess("Person removed successfully.");
-        logger.logCollectionSaved();
-        return true;
+        try {
+            collectionManager.removeById(id, 0L);
+            console.printSuccess("Person removed successfully.");
+            logger.logCollectionSaved();
+            return true;
+        } catch (SQLException e) {
+            console.printError("Error removing from database: " + e.getMessage());
+            return false;
+        }
     }
 
     private boolean handleClear() {
-        collectionManager.clear();
-        console.printSuccess("Collection cleared.");
-        logger.logCollectionSaved();
-        return true;
+        try {
+            collectionManager.clear(0L);
+            console.printSuccess("Collection cleared.");
+            logger.logCollectionSaved();
+            return true;
+        } catch (SQLException e) {
+            console.printError("Error clearing database: " + e.getMessage());
+            return false;
+        }
     }
 
     private boolean handleShow() {
@@ -174,10 +193,15 @@ public class ServerCommandManager {
             console.printError("Collection is empty");
             return false;
         }
-        collectionManager.removeFirst();
-        console.printSuccess("First element removed.");
-        logger.logCollectionSaved();
-        return true;
+        try {
+            collectionManager.removeFirst(0L);
+            console.printSuccess("First element removed.");
+            logger.logCollectionSaved();
+            return true;
+        } catch (SQLException e) {
+            console.printError("Error removing from database: " + e.getMessage());
+            return false;
+        }
     }
 
     private boolean handleReorder() {
@@ -243,4 +267,3 @@ public class ServerCommandManager {
         return true;
     }
 }
-

@@ -8,7 +8,9 @@ import axl.itmo.server.command.ServerCommandManager;
 import axl.itmo.server.logging.ServerLogger;
 import axl.itmo.server.net.RequestReader;
 import axl.itmo.server.net.ResponseSender;
-import axl.itmo.server.persistence.FileManager;
+import axl.itmo.server.net.RateLimiter;
+import axl.itmo.server.persistence.DatabaseHandler;
+import axl.itmo.server.utils.AuthUtils;
 import axl.itmo.server.utils.Console;
 
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Main server application with non-blocking NIO architecture.
@@ -38,8 +42,12 @@ public class ServerApp {
     private RequestReader requestReader;
     private ResponseSender responseSender;
     private ServerCommandManager serverCommandManager;
+    private RateLimiter rateLimiter;
     private Console console;
     private boolean running = true;
+    private ExecutorService readPool;
+    private ExecutorService processPool;
+    private ExecutorService sendPool;
 
     public static void main(String[] args) {
         int port = DEFAULT_PORT;
@@ -114,11 +122,13 @@ public class ServerApp {
      */
     private void initializeServer(String host, int port) throws IOException {
         // Initialize components
-        FileManager fileManager = new FileManager(ENV_VAR);
-        collectionManager = new CollectionManager(fileManager);
-        commandProcessor = new CommandProcessor(collectionManager);
+        DatabaseHandler dbHandler = new DatabaseHandler();
+        collectionManager = new CollectionManager(dbHandler);
+        AuthUtils authUtils = new AuthUtils(dbHandler);
+        commandProcessor = new CommandProcessor(collectionManager, authUtils);
         requestReader = new RequestReader();
         responseSender = new ResponseSender();
+        rateLimiter = new RateLimiter();
         console = new Console(new java.util.Scanner(System.in), false);
         serverCommandManager = new ServerCommandManager(collectionManager, console);
 
@@ -130,6 +140,11 @@ public class ServerApp {
         // Create selector
         selector = Selector.open();
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        // Initialize thread pools
+        readPool = Executors.newFixedThreadPool(4);
+        processPool = Executors.newFixedThreadPool(4);
+        sendPool = Executors.newFixedThreadPool(4);
 
         logger.logServerStart(port);
     }
@@ -163,18 +178,43 @@ public class ServerApp {
         SocketChannel clientChannel = (SocketChannel) key.channel();
         String clientAddress = clientChannel.socket().getInetAddress().getHostAddress();
 
-        // The channel is already in non-blocking mode due to accept() handling.
-        CommandRequest request = requestReader.readRequest(clientChannel);
-        if (request == null) {
-            // Null might mean channel is closed or incomplete read (for now, assuming simple case where null means error/disconnect)
-            key.cancel();
-            clientChannel.close();
-            logger.logClientDisconnected(clientAddress);
-            return;
-        }
+        readPool.execute(() -> {
+            synchronized (clientChannel) {
+                CommandRequest request = requestReader.readRequest(clientChannel);
+                if (request == null) {
+                    // Null might mean channel is closed or incomplete read (for now, assuming simple case where null means error/disconnect)
+                    key.cancel();
+                    try {
+                        clientChannel.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                    logger.logClientDisconnected(clientAddress);
+                    return;
+                }
+                
+                // Rate Limiting Check
+                if (!rateLimiter.isAllowed(clientAddress)) {
+                    sendPool.execute(() -> {
+                        synchronized (clientChannel) {
+                            responseSender.sendResponse(clientChannel, new CommandResponse(false, "Rate limit exceeded. Too many requests."));
+                        }
+                    });
+                    return;
+                }
 
-        CommandResponse response = commandProcessor.process(request);
-        responseSender.sendResponse(clientChannel, response);
+                final CommandRequest finalRequest = request;
+                processPool.execute(() -> {
+                    CommandResponse response = commandProcessor.process(finalRequest);
+
+                    sendPool.execute(() -> {
+                        synchronized (clientChannel) {
+                            responseSender.sendResponse(clientChannel, response);
+                        }
+                    });
+                });
+            }
+        });
     }
 
     /**
@@ -187,6 +227,15 @@ public class ServerApp {
             }
             if (serverSocketChannel != null && serverSocketChannel.isOpen()) {
                 serverSocketChannel.close();
+            }
+            if (readPool != null && !readPool.isShutdown()) {
+                readPool.shutdown();
+            }
+            if (processPool != null && !processPool.isShutdown()) {
+                processPool.shutdown();
+            }
+            if (sendPool != null && !sendPool.isShutdown()) {
+                sendPool.shutdown();
             }
         } catch (IOException e) {
             logger.logError("Error during shutdown", e);
@@ -219,6 +268,19 @@ public class ServerApp {
                 case "exit":
                     console.printSuccess("Server shutdown initiated...");
                     running = false;
+                    break;
+                case "set_rate_limit":
+                    if (parts.length < 2) {
+                        console.printError("set_rate_limit requires a number argument");
+                        return;
+                    }
+                    try {
+                        int limit = Integer.parseInt(parts[1]);
+                        rateLimiter.setMaxRequestsPerMinute(limit);
+                        console.printSuccess("Rate limit set to " + limit + " requests per minute.");
+                    } catch (NumberFormatException e) {
+                        console.printError("Invalid number format for rate limit.");
+                    }
                     break;
                 case "add":
                     serverCommandManager.executeCommand(command, null);
@@ -275,7 +337,12 @@ public class ServerApp {
                 case "info":
                 case "save":
                 case "help":
-                    serverCommandManager.executeCommand(command, null);
+                    if (command.equals("help")) {
+                        serverCommandManager.executeCommand(command, null);
+                        console.println("  set_rate_limit <limit> - Set max requests per minute per client");
+                    } else {
+                        serverCommandManager.executeCommand(command, null);
+                    }
                     break;
                 default:
                     console.printError("Unknown command: " + command);

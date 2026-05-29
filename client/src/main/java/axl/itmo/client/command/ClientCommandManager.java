@@ -26,6 +26,8 @@ public class ClientCommandManager {
     private final List<String> commandHistory;
     
     private SocketChannel socketChannel;
+    private String userLogin;
+    private String userPassword;
 
     public ClientCommandManager(String serverHost, int serverPort, Console console) {
         this.serverHost = serverHost;
@@ -117,13 +119,23 @@ public class ClientCommandManager {
         if (commandName.equals("execute_script")) {
             return executeScript((String) argument);
         }
-        
+
+        // Handle register and login locally
+        if (commandName.equals("register")) {
+            return handleRegister();
+        }
+        if (commandName.equals("login")) {
+            return handleLogin();
+        }
+
         if (!connect()) {
             return false;
         }
 
         try {
             CommandRequest request = new CommandRequest(commandName, argument);
+            request.setLogin(userLogin);
+            request.setPassword(userPassword);
             sender.sendCommand(request, socketChannel);
 
             CommandResponse response = receiver.receiveResponse(socketChannel);
@@ -158,6 +170,8 @@ public class ClientCommandManager {
      */
     private void printHelp() {
         console.printInfo("Available commands:");
+        console.println("  register - зарегистрироваться");
+        console.println("  login - войти в систему");
         console.println("  add - добавить новый элемент в коллекцию");
         console.println("  update <id> - обновить значение элемента коллекции");
         console.println("  remove_by_id <id> - удалить элемент из коллекции по ID");
@@ -294,6 +308,8 @@ public class ClientCommandManager {
                 // Execute the command
                 try {
                     CommandRequest request = new CommandRequest(command, argument);
+                    request.setLogin(userLogin);
+                    request.setPassword(userPassword);
                     sender.sendCommand(request, socketChannel);
 
                     CommandResponse response = receiver.receiveResponse(socketChannel);
@@ -327,6 +343,106 @@ public class ClientCommandManager {
 
         } catch (java.io.IOException e) {
             console.printError("Error reading script file '" + fileName + "': " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Handles user registration.
+     * @return true if registration successful
+     */
+    private boolean handleRegister() {
+        console.printInfo("Registration");
+        console.println("Enter login: ");
+        String login = console.readLine();
+        if (login == null || login.trim().isEmpty()) {
+            console.printError("Login cannot be empty");
+            return false;
+        }
+        console.println("Enter password: ");
+        String password = console.readLine();
+        if (password == null || password.trim().isEmpty()) {
+            console.printError("Password cannot be empty");
+            return false;
+        }
+
+        if (!connect()) {
+            return false;
+        }
+
+        try {
+            CommandRequest request = new CommandRequest("register", null);
+            request.setLogin(login);
+            request.setPassword(password);
+            sender.sendCommand(request, socketChannel);
+
+            CommandResponse response = receiver.receiveResponse(socketChannel);
+
+            if (response.isSuccess()) {
+                console.printSuccess(response.getMessage());
+                userLogin = login;
+                userPassword = password;
+                return true;
+            } else {
+                console.printError(response.getMessage());
+                return false;
+            }
+        } catch (IOException e) {
+            console.printError("Network error: " + e.getMessage());
+            disconnect();
+            return false;
+        } catch (ClassNotFoundException e) {
+            console.printError("Protocol error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Handles user login.
+     * @return true if login successful
+     */
+    private boolean handleLogin() {
+        console.printInfo("Login");
+        console.println("Enter login: ");
+        String login = console.readLine();
+        if (login == null || login.trim().isEmpty()) {
+            console.printError("Login cannot be empty");
+            return false;
+        }
+        console.println("Enter password: ");
+        String password = console.readLine();
+        if (password == null || password.trim().isEmpty()) {
+            console.printError("Password cannot be empty");
+            return false;
+        }
+
+        if (!connect()) {
+            return false;
+        }
+
+        try {
+            CommandRequest request = new CommandRequest("login", null);
+            request.setLogin(login);
+            request.setPassword(password);
+            sender.sendCommand(request, socketChannel);
+
+            CommandResponse response = receiver.receiveResponse(socketChannel);
+
+            if (response.isSuccess()) {
+                console.printSuccess(response.getMessage());
+                userLogin = login;
+                userPassword = password;
+                return true;
+            } else {
+                console.printError(response.getMessage());
+                return false;
+            }
+        } catch (IOException e) {
+            console.printError("Network error: " + e.getMessage());
+            disconnect();
+            return false;
+        } catch (ClassNotFoundException e) {
+            console.printError("Protocol error: " + e.getMessage());
             return false;
         }
     }

@@ -7,3 +7,4 @@ axl/itmo/common/model/Location.class
 axl/itmo/common/model/Person.class
 axl/itmo/common/model/Coordinates.class
 axl/itmo/common/model/Color.class
+axl/itmo/common/model/User.class

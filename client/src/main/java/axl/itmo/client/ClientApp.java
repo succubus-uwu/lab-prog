@@ -121,6 +121,7 @@ public class ClientApp {
                 commandManager.executeCommand(command, passportId);
             } else if (command.equals("show") || command.equals("clear") ||
                        command.equals("remove_first") || command.equals("reorder") ||
+                       command.equals("register") || command.equals("login") ||
                        command.equals("print_field_descending_passport_id") ||
                        command.equals("info")) {
                 commandManager.executeCommand(command, argument);

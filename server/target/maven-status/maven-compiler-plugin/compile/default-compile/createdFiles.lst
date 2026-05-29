@@ -1,4 +1,6 @@
+axl/itmo/server/net/RateLimiter.class
 axl/itmo/server/persistence/FileManager.class
+axl/itmo/server/persistence/DatabaseHandler.class
 axl/itmo/server/net/RequestReader.class
 axl/itmo/server/command/ServerCommandManager$1.class
 axl/itmo/server/net/ResponseSender.class
@@ -7,8 +9,10 @@ axl/itmo/server/logging/ServerLogger$1.class
 axl/itmo/server/persistence/FileManager$1.class
 axl/itmo/server/collection/CollectionManager.class
 axl/itmo/server/command/CommandProcessor.class
+axl/itmo/server/utils/AuthUtils.class
 axl/itmo/server/logging/ServerLogger.class
 axl/itmo/server/utils/Console.class
 axl/itmo/server/ServerApp.class
 axl/itmo/server/command/ServerCommandManager.class
 axl/itmo/server/command/CommandProcessor$1.class
+axl/itmo/server/net/RateLimiter$ClientRecord.class

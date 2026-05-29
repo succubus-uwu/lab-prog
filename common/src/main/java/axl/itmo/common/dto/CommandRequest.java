@@ -23,6 +23,16 @@ public class CommandRequest implements Serializable {
     private Object argument;
 
     /**
+     * User login for authentication.
+     */
+    private String login;
+
+    /**
+     * User password for authentication.
+     */
+    private String password;
+
+    /**
      * Default constructor for deserialization.
      */
     public CommandRequest() {
@@ -55,11 +65,29 @@ public class CommandRequest implements Serializable {
         this.argument = argument;
     }
 
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String toString() {
         return "CommandRequest{" +
                 "commandName='" + commandName + '\'' +
                 ", argument=" + argument +
+                ", login='" + login + '\'' +
+                ", password='" + password + '\'' +
                 '}';
     }
 }

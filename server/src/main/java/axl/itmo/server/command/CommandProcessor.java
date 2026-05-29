@@ -4,8 +4,11 @@ import axl.itmo.common.CommandNames;
 import axl.itmo.common.dto.CommandRequest;
 import axl.itmo.common.dto.CommandResponse;
 import axl.itmo.common.model.Person;
+import axl.itmo.common.model.User;
 import axl.itmo.server.collection.CollectionManager;
+import axl.itmo.server.utils.AuthUtils;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 
@@ -15,9 +18,11 @@ import java.util.LinkedList;
  */
 public class CommandProcessor {
     private final CollectionManager collectionManager;
+    private final AuthUtils authUtils;
 
-    public CommandProcessor(CollectionManager collectionManager) {
+    public CommandProcessor(CollectionManager collectionManager, AuthUtils authUtils) {
         this.collectionManager = collectionManager;
+        this.authUtils = authUtils;
     }
 
     /**
@@ -36,21 +41,34 @@ public class CommandProcessor {
                 return new CommandResponse(false, "Unknown command: " + commandName);
             }
 
+            User user = null;
+            // Authenticate user for commands that require it
+            if (cmd != CommandNames.REGISTER && cmd != CommandNames.LOGIN) {
+                user = authenticateUser(request);
+                if (user == null) {
+                    return new CommandResponse(false, "Authentication failed");
+                }
+            }
+
             switch (cmd) {
+                case REGISTER:
+                    return handleRegister(request.getLogin(), request.getPassword());
+                case LOGIN:
+                    return handleLogin(request.getLogin(), request.getPassword());
                 case ADD:
-                    return handleAdd((Person) argument);
+                    return handleAdd((Person) argument, user);
                 case UPDATE:
-                    return handleUpdate((Person) argument);
+                    return handleUpdate((Person) argument, user);
                 case REMOVE_BY_ID:
-                    return handleRemoveById((Integer) argument);
+                    return handleRemoveById((Integer) argument, user);
                 case CLEAR:
-                    return handleClear();
+                    return handleClear(user);
                 case SHOW:
                     return handleShow();
                 case INFO:
                     return handleInfo();
                 case REMOVE_FIRST:
-                    return handleRemoveFirst();
+                    return handleRemoveFirst(user);
                 case REORDER:
                     return handleReorder();
                 case EXECUTE_SCRIPT:
@@ -75,7 +93,47 @@ public class CommandProcessor {
         }
     }
 
-    private CommandResponse handleAdd(Person person) {
+    private User authenticateUser(CommandRequest request) {
+        try {
+            return authUtils.authenticateUser(request.getLogin(), request.getPassword());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private CommandResponse handleRegister(String login, String password) {
+        if (login == null || login.isEmpty() || password == null || password.isEmpty()) {
+            return new CommandResponse(false, "Invalid login or password");
+        }
+        try {
+            boolean success = authUtils.registerUser(login, password);
+            if (success) {
+                return new CommandResponse(true, "User registered successfully");
+            } else {
+                return new CommandResponse(false, "Login already exists");
+            }
+        } catch (Exception e) {
+            return new CommandResponse(false, "Registration failed: " + e.getMessage());
+        }
+    }
+
+    private CommandResponse handleLogin(String login, String password) {
+        if (login == null || login.isEmpty() || password == null || password.isEmpty()) {
+            return new CommandResponse(false, "Invalid login or password");
+        }
+        try {
+            User user = authUtils.authenticateUser(login, password);
+            if (user != null) {
+                return new CommandResponse(true, "Login successful");
+            } else {
+                return new CommandResponse(false, "Invalid login or password");
+            }
+        } catch (Exception e) {
+            return new CommandResponse(false, "Login failed: " + e.getMessage());
+        }
+    }
+
+    private CommandResponse handleAdd(Person person, User user) {
         if (person == null) {
             return new CommandResponse(false, "Invalid person data");
         }
@@ -83,12 +141,17 @@ public class CommandProcessor {
         int newId = collectionManager.generateId();
         person.setId(newId);
         person.setCreationDate(LocalDateTime.now());
+        person.setOwnerId(user.getId());
 
-        collectionManager.add(person);
-        return new CommandResponse(true, "Person added successfully with ID: " + newId);
+        try {
+            collectionManager.add(person, user.getId());
+            return new CommandResponse(true, "Person added successfully with ID: " + newId);
+        } catch (SQLException e) {
+            return new CommandResponse(false, "Failed to add person: " + e.getMessage());
+        }
     }
 
-    private CommandResponse handleUpdate(Person person) {
+    private CommandResponse handleUpdate(Person person, User user) {
         if (person == null) {
             return new CommandResponse(false, "Invalid person data");
         }
@@ -99,11 +162,16 @@ public class CommandProcessor {
         }
 
         person.setCreationDate(LocalDateTime.now());
-        collectionManager.update(id, person);
-        return new CommandResponse(true, "Person updated successfully");
+        
+        try {
+            collectionManager.update(id, person, user.getId());
+            return new CommandResponse(true, "Person updated successfully");
+        } catch (SQLException e) {
+            return new CommandResponse(false, "Failed to update person: " + e.getMessage());
+        }
     }
 
-    private CommandResponse handleRemoveById(Integer id) {
+    private CommandResponse handleRemoveById(Integer id, User user) {
         if (id == null || id <= 0) {
             return new CommandResponse(false, "Invalid ID");
         }
@@ -112,13 +180,21 @@ public class CommandProcessor {
             return new CommandResponse(false, "Person with ID " + id + " not found");
         }
 
-        collectionManager.removeById(id);
-        return new CommandResponse(true, "Person removed successfully");
+        try {
+            collectionManager.removeById(id, user.getId());
+            return new CommandResponse(true, "Person removed successfully");
+        } catch (SQLException e) {
+            return new CommandResponse(false, "Failed to remove person: " + e.getMessage());
+        }
     }
 
-    private CommandResponse handleClear() {
-        collectionManager.clear();
-        return new CommandResponse(true, "Collection cleared");
+    private CommandResponse handleClear(User user) {
+        try {
+            collectionManager.clear(user.getId());
+            return new CommandResponse(true, "Your objects in the collection were cleared");
+        } catch (SQLException e) {
+            return new CommandResponse(false, "Failed to clear collection: " + e.getMessage());
+        }
     }
 
     private CommandResponse handleShow() {
@@ -138,12 +214,16 @@ public class CommandProcessor {
         return new CommandResponse(true, info);
     }
 
-    private CommandResponse handleRemoveFirst() {
+    private CommandResponse handleRemoveFirst(User user) {
         if (collectionManager.getCollection().isEmpty()) {
             return new CommandResponse(false, "Collection is empty");
         }
-        collectionManager.removeFirst();
-        return new CommandResponse(true, "First element removed");
+        try {
+            collectionManager.removeFirst(user.getId());
+            return new CommandResponse(true, "First element removed");
+        } catch (SQLException e) {
+            return new CommandResponse(false, "Failed to remove first element: " + e.getMessage());
+        }
     }
 
     private CommandResponse handleReorder() {
@@ -193,4 +273,3 @@ public class CommandProcessor {
         return new CommandResponse(true, result);
     }
 }
-

@@ -2,10 +2,13 @@ package axl.itmo.server.collection;
 
 import axl.itmo.common.model.Person;
 import axl.itmo.common.util.PersonLocationComparator;
-import axl.itmo.server.persistence.FileManager;
+import axl.itmo.server.persistence.DatabaseHandler;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
@@ -14,13 +17,19 @@ import java.util.stream.Collectors;
  * Thread-safe for multi-threaded server console access.
  */
 public class CollectionManager {
-    private final LinkedList<Person> collection;
+    private LinkedList<Person> collection;
     private final LocalDateTime creationDate;
-    private final FileManager fileManager;
+    private final DatabaseHandler dbHandler;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public CollectionManager(FileManager fileManager) {
-        this.fileManager = fileManager;
-        this.collection = fileManager.readCollection();
+    public CollectionManager(DatabaseHandler dbHandler) {
+        this.dbHandler = dbHandler;
+        try {
+            this.collection = dbHandler.loadPersons();
+        } catch (SQLException e) {
+            System.err.println("Error loading persons from database: " + e.getMessage());
+            this.collection = new LinkedList<>();
+        }
         this.creationDate = LocalDateTime.now();
         validateIds();
         sortCollection();
@@ -51,7 +60,12 @@ public class CollectionManager {
     }
 
     public LinkedList<Person> getCollection() {
-        return new LinkedList<>(collection); // Return copy to avoid external modification
+        lock.readLock().lock();
+        try {
+            return new LinkedList<>(collection); // Return copy to avoid external modification
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public LocalDateTime getCreationDate() {
@@ -61,70 +75,112 @@ public class CollectionManager {
     /**
      * Adds a person to the collection and sorts.
      */
-    public void add(Person person) {
-        collection.add(person);
-        sortCollection();
+    public void add(Person person, long ownerId) throws SQLException {
+        lock.writeLock().lock();
+        try {
+            dbHandler.savePerson(person, ownerId);
+            person.setOwnerId(ownerId);
+            collection.add(person);
+            sortCollection();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
      * Updates a person in the collection by ID.
      */
-    public void update(int id, Person newPerson) {
-        Optional<Integer> indexOpt = collection.stream()
-                .map(Person::getId)
-                .toList()
-                .stream()
-                .peek(pid -> {})
-                .toList()
-                .stream()
-                .filter(pid -> pid == id)
-                .findFirst()
-                .map(pid -> {
-                    for (int i = 0; i < collection.size(); i++) {
-                        if (collection.get(i).getId() == id) {
-                            return i;
-                        }
-                    }
-                    return -1;
-                });
-
-        // Simpler approach
-        for (int i = 0; i < collection.size(); i++) {
-            if (collection.get(i).getId() == id) {
-                collection.set(i, newPerson);
-                sortCollection();
-                return;
+    public void update(int id, Person newPerson, long ownerId) throws SQLException {
+        lock.writeLock().lock();
+        try {
+            Person existing = getByIdUnsafe(id);
+            if (existing == null) {
+                throw new SQLException("Person not found");
             }
+            if (existing.getOwnerId() != ownerId && ownerId != 0L) {
+                throw new SQLException("Permission denied: You do not own this object.");
+            }
+            
+            dbHandler.updatePerson(newPerson, ownerId);
+            newPerson.setOwnerId(ownerId);
+            
+            for (int i = 0; i < collection.size(); i++) {
+                if (collection.get(i).getId() == id) {
+                    collection.set(i, newPerson);
+                    sortCollection();
+                    return;
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     /**
      * Removes a person by ID using Stream API.
      */
-    public void removeById(int id) {
-        collection.removeIf(person -> person.getId() == id);
+    public void removeById(int id, long ownerId) throws SQLException {
+        lock.writeLock().lock();
+        try {
+            Person existing = getByIdUnsafe(id);
+            if (existing == null) {
+                throw new SQLException("Person not found");
+            }
+            if (existing.getOwnerId() != ownerId && ownerId != 0L) {
+                throw new SQLException("Permission denied: You do not own this object.");
+            }
+            
+            dbHandler.deletePerson(id, ownerId);
+            collection.removeIf(person -> person.getId() == id);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
-     * Clears the collection.
+     * Clears the collection for a specific user.
      */
-    public void clear() {
-        collection.clear();
+    public void clear(long ownerId) throws SQLException {
+        lock.writeLock().lock();
+        try {
+            dbHandler.deletePersonsByOwner(ownerId);
+            collection.removeIf(person -> person.getOwnerId() == ownerId || ownerId == 0L);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
      * Saves the collection to file.
      */
     public void save() {
-        fileManager.writeCollection(collection);
+        lock.writeLock().lock();
+        try {
+            dbHandler.savePersons(collection);
+        } catch (SQLException e) {
+            System.err.println("Error saving persons to database: " + e.getMessage());
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
-     * Removes the first element.
+     * Removes the first element belonging to the user.
      */
-    public void removeFirst() {
-        if (!collection.isEmpty()) {
-            collection.removeFirst();
+    public void removeFirst(long ownerId) throws SQLException {
+        lock.writeLock().lock();
+        try {
+            if (!collection.isEmpty()) {
+                Person p = collection.getFirst();
+                if (p.getOwnerId() == ownerId || ownerId == 0L) {
+                    dbHandler.deletePerson(p.getId(), p.getOwnerId());
+                    collection.removeFirst();
+                } else {
+                    throw new SQLException("Permission denied: You do not own the first object.");
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -132,36 +188,56 @@ public class CollectionManager {
      * Reverses the collection order.
      */
     public void reorder() {
-        Collections.reverse(collection);
+        lock.writeLock().lock();
+        try {
+            Collections.reverse(collection);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
      * Counts persons with height less than specified value using Stream API.
      */
     public long countLessThanHeight(float height) {
-        return collection.stream()
-                .filter(p -> p.getHeight() < height)
-                .count();
+        lock.readLock().lock();
+        try {
+            return collection.stream()
+                    .filter(p -> p.getHeight() < height)
+                    .count();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * Counts persons with passport ID greater than specified value using Stream API.
      */
     public long countGreaterThanPassportID(String passportID) {
-        return collection.stream()
-                .filter(p -> p.getPassportID() != null && p.getPassportID().compareTo(passportID) > 0)
-                .count();
+        lock.readLock().lock();
+        try {
+            return collection.stream()
+                    .filter(p -> p.getPassportID() != null && p.getPassportID().compareTo(passportID) > 0)
+                    .count();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * Prints passport IDs in descending order using Stream API.
      */
     public String printFieldDescendingPassportID() {
-        return collection.stream()
-                .map(Person::getPassportID)
-                .filter(Objects::nonNull)
-                .sorted(Collections.reverseOrder())
-                .collect(Collectors.joining("\n"));
+        lock.readLock().lock();
+        try {
+            return collection.stream()
+                    .map(Person::getPassportID)
+                    .filter(Objects::nonNull)
+                    .sorted(Collections.reverseOrder())
+                    .collect(Collectors.joining("\n"));
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -176,25 +252,39 @@ public class CollectionManager {
      * Generates a unique ID for a new person.
      */
     public int generateId() {
-        if (collection.isEmpty()) return 1;
+        lock.readLock().lock();
+        try {
+            if (collection.isEmpty()) return 1;
 
-        Set<Integer> used = collection.stream()
-                .map(Person::getId)
-                .collect(Collectors.toSet());
+            Set<Integer> used = collection.stream()
+                    .map(Person::getId)
+                    .collect(Collectors.toSet());
 
-        for (int candidate = 1; candidate > 0; candidate++) {
-            if (!used.contains(candidate)) {
-                return candidate;
+            for (int candidate = 1; candidate > 0; candidate++) {
+                if (!used.contains(candidate)) {
+                    return candidate;
+                }
             }
-        }
 
-        throw new IllegalStateException("Could not generate unique positive ID: all values are taken");
+            throw new IllegalStateException("Could not generate unique positive ID: all values are taken");
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * Finds a person by ID.
      */
     public Person getById(int id) {
+        lock.readLock().lock();
+        try {
+            return getByIdUnsafe(id);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+    
+    private Person getByIdUnsafe(int id) {
         return collection.stream()
                 .filter(p -> p.getId() == id)
                 .findFirst()
@@ -205,8 +295,13 @@ public class CollectionManager {
      * Gets collection sorted by location field.
      */
     public LinkedList<Person> getCollectionSortedByLocation() {
-        return collection.stream()
-                .sorted(new PersonLocationComparator())
-                .collect(Collectors.toCollection(LinkedList::new));
+        lock.readLock().lock();
+        try {
+            return collection.stream()
+                    .sorted(new PersonLocationComparator())
+                    .collect(Collectors.toCollection(LinkedList::new));
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 }

@@ -19,7 +19,10 @@ public enum CommandNames {
     COUNT_LESS_THAN_HEIGHT("count_less_than_height"),
     COUNT_GREATER_THAN_PASSPORT_ID("count_greater_than_passport_id"),
     PRINT_FIELD_DESCENDING_PASSPORT_ID("print_field_descending_passport_id"),
-    SAVE("save");
+    SAVE("save"),
+    REGISTER("register"),
+    LOGIN("login"),
+    SET_RATE_LIMIT("set_rate_limit");
 
     private final String value;
 
