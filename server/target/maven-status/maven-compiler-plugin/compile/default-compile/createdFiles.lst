@@ -2,6 +2,7 @@ axl/itmo/server/net/RateLimiter.class
 axl/itmo/server/persistence/FileManager.class
 axl/itmo/server/persistence/DatabaseHandler.class
 axl/itmo/server/net/RequestReader.class
+axl/itmo/server/net/PushNotificationService.class
 axl/itmo/server/command/ServerCommandManager$1.class
 axl/itmo/server/net/ResponseSender.class
 axl/itmo/server/logging/ServerLogger$2.class

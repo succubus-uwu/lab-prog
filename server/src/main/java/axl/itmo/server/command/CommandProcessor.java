@@ -6,31 +6,27 @@ import axl.itmo.common.dto.CommandResponse;
 import axl.itmo.common.model.Person;
 import axl.itmo.common.model.User;
 import axl.itmo.server.collection.CollectionManager;
+import axl.itmo.server.net.PushNotificationService;
 import axl.itmo.server.utils.AuthUtils;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 
-/**
- * Processes commands received from clients.
- * Executes commands against the server collection and returns responses.
- */
 public class CommandProcessor {
     private final CollectionManager collectionManager;
     private final AuthUtils authUtils;
+    private PushNotificationService pushService;
 
     public CommandProcessor(CollectionManager collectionManager, AuthUtils authUtils) {
         this.collectionManager = collectionManager;
         this.authUtils = authUtils;
     }
 
-    /**
-     * Processes a command request and returns a response.
-     *
-     * @param request the command request from client
-     * @return command response
-     */
+    public void setPushService(PushNotificationService pushService) {
+        this.pushService = pushService;
+    }
+
     public CommandResponse process(CommandRequest request) {
         String commandName = request.getCommandName();
         Object argument = request.getArgument();
@@ -42,8 +38,7 @@ public class CommandProcessor {
             }
 
             User user = null;
-            // Authenticate user for commands that require it
-            if (cmd != CommandNames.REGISTER && cmd != CommandNames.LOGIN) {
+            if (cmd != CommandNames.REGISTER && cmd != CommandNames.LOGIN && cmd != CommandNames.SUBSCRIBE) {
                 user = authenticateUser(request);
                 if (user == null) {
                     return new CommandResponse(false, "Authentication failed");
@@ -55,6 +50,8 @@ public class CommandProcessor {
                     return handleRegister(request.getLogin(), request.getPassword());
                 case LOGIN:
                     return handleLogin(request.getLogin(), request.getPassword());
+                case SUBSCRIBE:
+                    return handleSubscribe(request.getLogin(), request.getPassword());
                 case ADD:
                     return handleAdd((Person) argument, user);
                 case UPDATE:
@@ -71,6 +68,9 @@ public class CommandProcessor {
                     return handleRemoveFirst(user);
                 case REORDER:
                     return handleReorder();
+                case SAVE:
+                    collectionManager.save();
+                    return new CommandResponse(true, "Collection saved");
                 case EXECUTE_SCRIPT:
                     return new CommandResponse(false, "Execute script not supported on server");
                 case EXIT:
@@ -101,6 +101,12 @@ public class CommandProcessor {
         }
     }
 
+    private void broadcastUpdate() {
+        if (pushService != null) {
+            pushService.broadcast(collectionManager.getCollection());
+        }
+    }
+
     private CommandResponse handleRegister(String login, String password) {
         if (login == null || login.isEmpty() || password == null || password.isEmpty()) {
             return new CommandResponse(false, "Invalid login or password");
@@ -108,7 +114,12 @@ public class CommandProcessor {
         try {
             boolean success = authUtils.registerUser(login, password);
             if (success) {
-                return new CommandResponse(true, "User registered successfully");
+                // Also authenticate to return userId immediately
+                try {
+                    User created = authUtils.authenticateUser(login, password);
+                    return new CommandResponse(true, "User registered successfully:" + (created != null ? created.getId() : 0));
+                } catch (Exception ignored) {}
+                return new CommandResponse(true, "User registered successfully:0");
             } else {
                 return new CommandResponse(false, "Login already exists");
             }
@@ -124,7 +135,8 @@ public class CommandProcessor {
         try {
             User user = authUtils.authenticateUser(login, password);
             if (user != null) {
-                return new CommandResponse(true, "Login successful");
+                // Encode userId in message so GUI client can obtain it without extra round-trip
+                return new CommandResponse(true, "Login successful:" + user.getId());
             } else {
                 return new CommandResponse(false, "Invalid login or password");
             }
@@ -133,18 +145,33 @@ public class CommandProcessor {
         }
     }
 
+    private CommandResponse handleSubscribe(String login, String password) {
+        if (login == null || login.isEmpty() || password == null || password.isEmpty()) {
+            return new CommandResponse(false, "Invalid credentials for subscription");
+        }
+        try {
+            User user = authUtils.authenticateUser(login, password);
+            if (user == null) {
+                return new CommandResponse(false, "Authentication failed");
+            }
+            // ACK — ServerApp will add the channel to PushNotificationService after sending this response
+            return new CommandResponse(true, "subscribed");
+        } catch (Exception e) {
+            return new CommandResponse(false, "Subscription failed: " + e.getMessage());
+        }
+    }
+
     private CommandResponse handleAdd(Person person, User user) {
         if (person == null) {
             return new CommandResponse(false, "Invalid person data");
         }
-
         int newId = collectionManager.generateId();
         person.setId(newId);
         person.setCreationDate(LocalDateTime.now());
         person.setOwnerId(user.getId());
-
         try {
             collectionManager.add(person, user.getId());
+            broadcastUpdate();
             return new CommandResponse(true, "Person added successfully with ID: " + newId);
         } catch (SQLException e) {
             return new CommandResponse(false, "Failed to add person: " + e.getMessage());
@@ -155,16 +182,14 @@ public class CommandProcessor {
         if (person == null) {
             return new CommandResponse(false, "Invalid person data");
         }
-
         int id = person.getId();
         if (collectionManager.getById(id) == null) {
             return new CommandResponse(false, "Person with ID " + id + " not found");
         }
-
         person.setCreationDate(LocalDateTime.now());
-        
         try {
             collectionManager.update(id, person, user.getId());
+            broadcastUpdate();
             return new CommandResponse(true, "Person updated successfully");
         } catch (SQLException e) {
             return new CommandResponse(false, "Failed to update person: " + e.getMessage());
@@ -175,13 +200,12 @@ public class CommandProcessor {
         if (id == null || id <= 0) {
             return new CommandResponse(false, "Invalid ID");
         }
-
         if (collectionManager.getById(id) == null) {
             return new CommandResponse(false, "Person with ID " + id + " not found");
         }
-
         try {
             collectionManager.removeById(id, user.getId());
+            broadcastUpdate();
             return new CommandResponse(true, "Person removed successfully");
         } catch (SQLException e) {
             return new CommandResponse(false, "Failed to remove person: " + e.getMessage());
@@ -191,6 +215,7 @@ public class CommandProcessor {
     private CommandResponse handleClear(User user) {
         try {
             collectionManager.clear(user.getId());
+            broadcastUpdate();
             return new CommandResponse(true, "Your objects in the collection were cleared");
         } catch (SQLException e) {
             return new CommandResponse(false, "Failed to clear collection: " + e.getMessage());
@@ -220,6 +245,7 @@ public class CommandProcessor {
         }
         try {
             collectionManager.removeFirst(user.getId());
+            broadcastUpdate();
             return new CommandResponse(true, "First element removed");
         } catch (SQLException e) {
             return new CommandResponse(false, "Failed to remove first element: " + e.getMessage());
@@ -228,6 +254,7 @@ public class CommandProcessor {
 
     private CommandResponse handleReorder() {
         collectionManager.reorder();
+        broadcastUpdate();
         return new CommandResponse(true, "Collection reordered");
     }
 

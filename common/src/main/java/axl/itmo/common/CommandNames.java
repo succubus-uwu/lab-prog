@@ -22,7 +22,8 @@ public enum CommandNames {
     SAVE("save"),
     REGISTER("register"),
     LOGIN("login"),
-    SET_RATE_LIMIT("set_rate_limit");
+    SET_RATE_LIMIT("set_rate_limit"),
+    SUBSCRIBE("subscribe");
 
     private final String value;
 
