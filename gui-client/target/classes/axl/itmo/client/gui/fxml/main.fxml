@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="axl.itmo.client.gui.controller.MainController"
+            style="-fx-background-color: #1e1e2e;" minWidth="1000" minHeight="680">
+
+    <!-- ── TOP: toolbar ───────────────────────────────────────────── -->
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 8 14; -fx-background-color: #181825; -fx-border-color: #313244; -fx-border-width: 0 0 1 0;">
+            <Label fx:id="appTitleLabel" style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #89b4fa;"/>
+            <Separator orientation="VERTICAL"/>
+            <Label fx:id="currentUserLabel" style="-fx-text-fill: #a6e3a1;"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="localeLabelNode"/>
+            <ComboBox fx:id="localeCombo" minWidth="140"/>
+            <Button fx:id="logoutButton" onAction="#onLogout" styleClass="button"/>
+        </HBox>
+    </top>
+
+    <!-- ── CENTER: split table / canvas ──────────────────────────── -->
+    <center>
+        <SplitPane orientation="VERTICAL" dividerPositions="0.58">
+
+            <!-- Table area -->
+            <VBox spacing="6" style="-fx-padding: 8;">
+                <!-- Filter bar -->
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="filterColLabel"/>
+                    <ComboBox fx:id="filterColCombo" minWidth="130"/>
+                    <Label fx:id="filterValLabel"/>
+                    <TextField fx:id="filterField" minWidth="120" promptText="…"/>
+                    <Label fx:id="sortColLabel"/>
+                    <ComboBox fx:id="sortColCombo" minWidth="130"/>
+                    <ToggleButton fx:id="sortDirButton" onAction="#onToggleSortDir" minWidth="90"/>
+                    <Button fx:id="applyButton"  onAction="#onApplyFilter" styleClass="button,accent"/>
+                    <Button fx:id="clearFilterButton" onAction="#onClearFilter" styleClass="button"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="editSelButton"   onAction="#onEditSelected"   styleClass="button"/>
+                    <Button fx:id="deleteSelButton" onAction="#onDeleteSelected" styleClass="button,danger"/>
+                </HBox>
+                <TableView fx:id="tableView" VBox.vgrow="ALWAYS" editable="false">
+                    <columns>
+                        <TableColumn fx:id="colId"         minWidth="50"/>
+                        <TableColumn fx:id="colName"        minWidth="100"/>
+                        <TableColumn fx:id="colCoordX"      minWidth="60"/>
+                        <TableColumn fx:id="colCoordY"      minWidth="60"/>
+                        <TableColumn fx:id="colHeight"      minWidth="70"/>
+                        <TableColumn fx:id="colBirthday"    minWidth="100"/>
+                        <TableColumn fx:id="colPassport"    minWidth="100"/>
+                        <TableColumn fx:id="colEyeColor"    minWidth="90"/>
+                        <TableColumn fx:id="colLocName"     minWidth="100"/>
+                        <TableColumn fx:id="colLocX"        minWidth="60"/>
+                        <TableColumn fx:id="colLocY"        minWidth="60"/>
+                        <TableColumn fx:id="colLocZ"        minWidth="60"/>
+                        <TableColumn fx:id="colCreated"     minWidth="130"/>
+                        <TableColumn fx:id="colOwner"       minWidth="70"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Canvas area -->
+            <VBox spacing="4" style="-fx-padding: 6;">
+                <Label fx:id="canvasTitle" style="-fx-text-fill: #89b4fa; -fx-font-weight: bold;"/>
+                <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="false" fitToHeight="false"
+                            style="-fx-background-color: #181825;">
+                    <Pane fx:id="canvasPane" prefWidth="900" prefHeight="480"
+                          style="-fx-background-color: #181825;"/>
+                </ScrollPane>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <!-- ── RIGHT: commands panel ──────────────────────────────────── -->
+    <right>
+        <ScrollPane fitToWidth="true" minWidth="170" maxWidth="200"
+                    style="-fx-background-color: #181825; -fx-border-color: #313244; -fx-border-width: 0 0 0 1;">
+            <VBox spacing="4" style="-fx-padding: 10;">
+                <Label fx:id="cmdTitleLabel" style="-fx-font-weight: bold; -fx-text-fill: #89b4fa;"/>
+                <Separator/>
+                <Button fx:id="btnAdd"          onAction="#cmdAdd"          styleClass="cmd-button"/>
+                <Button fx:id="btnUpdate"       onAction="#cmdUpdate"       styleClass="cmd-button"/>
+                <Button fx:id="btnRemove"       onAction="#cmdRemove"       styleClass="cmd-button"/>
+                <Button fx:id="btnClear"        onAction="#cmdClear"        styleClass="cmd-button"/>
+                <Separator/>
+                <Button fx:id="btnShow"         onAction="#cmdShow"         styleClass="cmd-button"/>
+                <Button fx:id="btnInfo"         onAction="#cmdInfo"         styleClass="cmd-button"/>
+                <Separator/>
+                <Button fx:id="btnRemoveFirst"  onAction="#cmdRemoveFirst"  styleClass="cmd-button"/>
+                <Button fx:id="btnReorder"      onAction="#cmdReorder"      styleClass="cmd-button"/>
+                <Separator/>
+                <Button fx:id="btnCountHeight"  onAction="#cmdCountHeight"  styleClass="cmd-button"/>
+                <Button fx:id="btnCountPassport" onAction="#cmdCountPassport" styleClass="cmd-button"/>
+                <Button fx:id="btnPrintPassport" onAction="#cmdPrintPassport" styleClass="cmd-button"/>
+                <Separator/>
+                <Button fx:id="btnScript"       onAction="#cmdScript"       styleClass="cmd-button"/>
+                <Button fx:id="btnHistory"      onAction="#cmdHistory"      styleClass="cmd-button"/>
+                <Button fx:id="btnHelp"         onAction="#cmdHelp"         styleClass="cmd-button"/>
+                <Button fx:id="btnSave"         onAction="#cmdSave"         styleClass="cmd-button"/>
+            </VBox>
+        </ScrollPane>
+    </right>
+
+    <!-- ── BOTTOM: status bar ─────────────────────────────────────── -->
+    <bottom>
+        <HBox styleClass="status-bar" spacing="10">
+            <Label fx:id="statusLabel"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="pushStatusLabel"/>
+        </HBox>
+    </bottom>
+</BorderPane>

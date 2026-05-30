@@ -1,0 +1,14 @@
+axl/itmo/client/gui/render/CollectionCanvas.class
+axl/itmo/client/gui/GUIClientApp.class
+axl/itmo/client/gui/render/CollectionCanvas$1.class
+axl/itmo/client/gui/network/NetworkService.class
+axl/itmo/client/gui/controller/LoginController.class
+axl/itmo/client/gui/util/LocaleManager.class
+axl/itmo/client/gui/util/Dialogs.class
+axl/itmo/client/gui/network/PushListener.class
+axl/itmo/client/gui/controller/PersonInfoController.class
+axl/itmo/client/gui/util/ColorRegistry.class
+axl/itmo/client/gui/controller/MainController.class
+axl/itmo/client/gui/util/LocaleManager$PropertyResourceBundleWrapper.class
+axl/itmo/client/gui/render/CollectionCanvas$AnimState.class
+axl/itmo/client/gui/controller/EditPersonController.class

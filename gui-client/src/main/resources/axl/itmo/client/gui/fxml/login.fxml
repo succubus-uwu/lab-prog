@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="axl.itmo.client.gui.controller.LoginController"
+      spacing="16" maxWidth="400" minWidth="340"
+      style="-fx-padding: 40; -fx-alignment: center; -fx-background-color: #1e1e2e;">
+
+    <Label fx:id="titleLabel" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #89b4fa;"/>
+
+    <GridPane hgap="12" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+            <ColumnConstraints hgrow="ALWAYS" minWidth="160"/>
+        </columnConstraints>
+        <Label fx:id="hostLabel"     GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="hostField" GridPane.rowIndex="0" GridPane.columnIndex="1" text="localhost"/>
+        <Label fx:id="portLabel"     GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="portField" GridPane.rowIndex="1" GridPane.columnIndex="1" text="9999"/>
+        <Label fx:id="loginLabel"    GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="loginField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label fx:id="passwordLabel" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <PasswordField fx:id="passwordField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Label fx:id="errorLabel" id="errorLabel" wrapText="true" visible="false" maxWidth="320"/>
+
+    <HBox spacing="12" alignment="CENTER">
+        <Button fx:id="loginButton"    onAction="#onLogin"    styleClass="button,accent" defaultButton="true"/>
+        <Button fx:id="registerButton" onAction="#onRegister" styleClass="button"/>
+    </HBox>
+
+    <Separator/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Label fx:id="localeLabelNode"/>
+        <ComboBox fx:id="localeCombo" minWidth="140"/>
+    </HBox>
+</VBox>

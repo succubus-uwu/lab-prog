@@ -1,0 +1,11 @@
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/GUIClientApp.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/controller/EditPersonController.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/controller/LoginController.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/controller/MainController.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/controller/PersonInfoController.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/network/NetworkService.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/network/PushListener.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/render/CollectionCanvas.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/util/ColorRegistry.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/util/Dialogs.java
+/Users/sora/Desktop/Study/lab-prog/gui-client/src/main/java/axl/itmo/client/gui/util/LocaleManager.java
